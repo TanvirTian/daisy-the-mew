@@ -22,8 +22,15 @@ She's here to make your desktop a little more alive.
 - You can pick her up and drag her around
     
 - Watches your mouse with curious head movements
-    
 
+## 🎥 Demo
+
+See Daisy in action!
+
+https://github.com/user-attachments/assets/0b84884c-7edc-449a-b8bd-a29df83bdab5
+
+
+    
 ## Quick Start
 
 Clone the repository:
