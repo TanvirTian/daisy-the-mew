@@ -1,5 +1,3 @@
-Daisy the Mew
-
 <p align="center">
   <img src="Daisy_The_Mew.png" alt="Daisy the Mew" width="100%">
 </p>
