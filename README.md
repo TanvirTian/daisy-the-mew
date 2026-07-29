@@ -6,7 +6,7 @@
 
 Bored of staring at code all day?
 
-Meet  Daisy the Mew: a tiny cat that wanders around your desktop, takes cozy nap, follows your cursor with curious head tilts, and lets you pick her up for a quick cuddle.
+Meet  Daisy the Mew: a tiny cat that wanders around your desktop, takes cozy nap,Reacts to nearby cursor movement with subtle head tilts,and lets you pick her up for a quick cuddle.
 
 She's not here to boost your productivity.
 
