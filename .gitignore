@@ -1,0 +1,33 @@
+```gitignore
+
+# Coverage
+*.out
+coverage.out
+
+# Go workspace
+go.work
+go.work.sum
+
+# IDEs
+.vscode/
+.idea/
+
+# Vim
+*.swp
+*.swo
+
+# Linux
+*~
+
+# Logs
+*.log
+
+# Environment variables
+.env
+.env.*
+
+# Temporary files
+tmp/
+temp/
+
+```
