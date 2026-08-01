@@ -14,6 +14,8 @@ const (
 	ActionTypeSleep        ActionType = "sleep"
 	ActionTypeWalkingLeft  ActionType = "walking_left"
 	ActionTypeWalkingRight ActionType = "walking_right"
+	ActionTypeRunningLeft  ActionType = "running_left"
+	ActionTypeRunningRight ActionType = "running_right"
 	ActionTypeHang         ActionType = "hang"
 	ActionTypeLookAtCursor ActionType = "look_at_cursor"
 )
@@ -27,16 +29,24 @@ type ActionSource struct {
 	ImagePaths []string
 }
 
-func (src ActionSource) ToAction(actType ActionType) (*Action, error) {
-	images := make([]*ebiten.Image, 0, len(src.ImagePaths))
-	for _, imgPath := range src.ImagePaths {
-		img, _, err := ebitenutil.NewImageFromFile(imgPath)
-		if err != nil {
-			return nil, fmt.Errorf("unable to load image due: %v", err)
-		}
-		images = append(images, img)
+func (src ActionSource) ToAction(actionType ActionType) (*Action, error) {
+	if len(src.ImagePaths) == 0 {
+		return nil, fmt.Errorf("action %q has no image paths", actionType)
 	}
-	return &Action{Type: actType, Images: images}, nil
+
+	images := make([]*ebiten.Image, 0, len(src.ImagePaths))
+	for _, imagePath := range src.ImagePaths {
+		image, _, err := ebitenutil.NewImageFromFile(imagePath)
+		if err != nil {
+			return nil, fmt.Errorf("unable to load image %q: %w", imagePath, err)
+		}
+		images = append(images, image)
+	}
+
+	return &Action{
+		Type:   actionType,
+		Images: images,
+	}, nil
 }
 
 type Point struct {
@@ -49,4 +59,7 @@ type Dimension struct {
 	Height int
 }
 
-const walkSpeed = 4
+const (
+	walkSpeed = 16
+	runSpeed  = 90
+)

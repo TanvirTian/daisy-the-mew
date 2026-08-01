@@ -1,9 +1,8 @@
 package main
 
 import (
-	"log"
-
 	_ "image/png"
+	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -50,8 +49,18 @@ func main() {
 				"assets/walk/wr6.png",
 			},
 		},
+
+		ActionSourceRunning: &ActionSource{
+			ImagePaths: []string{
+				"assets/run/run1.png",
+				"assets/run/run2.png",
+				"assets/run/run3.png",
+				"assets/run/run4.png",
+				"assets/run/run5.png",
+			},
+		},
 		ActionSourceHang: &ActionSource{
-			ImagePaths: []string{			
+			ImagePaths: []string{
 				"assets/pick/pick01.png",
 				"assets/pick/pick02.png",
 			},
