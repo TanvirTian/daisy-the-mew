@@ -15,8 +15,8 @@ She's here to make your desktop a little more alive.
 
 ##  Features
 
-- Walks around your desktop
-    
+- Walks and runs around your desktop
+
 - Sleeps when she's tired
         
 - You can pick her up and drag her around
