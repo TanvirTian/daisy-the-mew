@@ -27,7 +27,7 @@ She's here to make your desktop a little more alive.
 
 See Daisy in action!
 
-https://github.com/user-attachments/assets/0b84884c-7edc-449a-b8bd-a29df83bdab5
+https://github.com/user-attachments/assets/cc1359ba-ec78-44b3-9528-138e6c423288
 
 
     
