@@ -12,16 +12,19 @@ She's not here to boost your productivity.
 
 She's here to make your desktop a little more alive.
 
+## Features
 
-##  Features
-
-- Walks and runs around your desktop
+- Walks and zooms around your desktop
 
 - Sleeps when she's tired
-        
-- You can pick her up and drag her around
-    
-- Watches your mouse with curious head movements
+
+- Pick her up and drag her anywhere
+
+- Curiously watches your mouse movements
+
+- Falls with cute bouncy physics when dropped
+
+- Loves sitting on the bottom edge of your screen
 
 ## 🎥 Demo
 
@@ -30,7 +33,6 @@ See Daisy in action!
 https://github.com/user-attachments/assets/cc1359ba-ec78-44b3-9528-138e6c423288
 
 
-    
 ## Quick Start
 
 Clone the repository:
