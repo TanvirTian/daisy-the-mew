@@ -39,6 +39,7 @@ const (
 	proximityHysteresis = 12.0
 	maxInactivityTicks  = 180
 
+	
 	initialSleepDelayTicks = 15 * 60
 	sleepCooldownMinTicks  = 30 * 60
 	sleepCooldownMaxTicks  = 60 * 60
@@ -49,6 +50,11 @@ const (
 	sleepLoopMax = 10
 
 	frameTicks = 16
+
+	// Fall and bounce physics. 
+	gravity           = 0.5  
+	maxFallVel        = 22.0 
+	bounceRestitution = 0.55 
 )
 
 func NewGame(cfg GameConfig) (*Game, error) {
@@ -153,6 +159,7 @@ func NewGame(cfg GameConfig) (*Game, error) {
 		sleepLoopTarget:      randomLoopTarget(sleepLoopMin, sleepLoopMax),
 		nextSleepAllowedTick: initialSleepDelayTicks,
 		randomRunLoopTarget:  2,
+		posYF:                float64(windowPos.Y),
 	}, nil
 }
 
@@ -184,6 +191,14 @@ type Game struct {
 	sleepLoopTarget      int
 	nextSleepAllowedTick int
 	randomRunLoopTarget  int
+
+	// Fall and bounce physics state
+	isFalling    bool
+	fallVel      float64
+	bounceActive bool
+	bounceVel    float64
+	bounceSquash float64
+	posYF        float64
 }
 
 func (g *Game) Update() error {
@@ -208,14 +223,14 @@ func (g *Game) Update() error {
 		Y: g.windowPos.Y + cursorPos.Y,
 	}
 
-	// Track desktop coordinates rather than window-local coordinates. Moving
-	// Daisy's window must not be mistaken for real pointer movement.
+	
 	g.trackGlobalCursor(globalCursorPos)
 
 	g.handleWakeUpKittyIfNecessary()
 	g.updateWindowPosOnLeftClick(cursorPos)
+	g.updateFallBounce()
 
-	// Mouse interaction has priority over cursor-looking behavior.
+	
 	if !ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 		g.handleCursorProximity(cursorPos)
 	}
@@ -238,8 +253,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	if bounds.Dx() > 0 && bounds.Dy() > 0 {
 		const catScale = 0.5
 
-		scaleX := (float64(g.windowDimension.Width) / float64(bounds.Dx())) * catScale
-		scaleY := (float64(g.windowDimension.Height) / float64(bounds.Dy())) * catScale
+		
+		squash := g.bounceSquash
+		scaleX := (float64(g.windowDimension.Width) / float64(bounds.Dx())) * catScale * (1 + squash)
+		scaleY := (float64(g.windowDimension.Height) / float64(bounds.Dy())) * catScale * (1 - squash)
 		scaledWidth := float64(bounds.Dx()) * scaleX
 		scaledHeight := float64(bounds.Dy()) * scaleY
 		offsetX := (float64(g.windowDimension.Width) - scaledWidth) / 2
@@ -277,9 +294,9 @@ func (g *Game) trackGlobalCursor(cursorPos Point) {
 }
 
 func (g *Game) handleCursorProximity(cursorPos Point) {
-	
 	switch g.currentAction.Type {
 	case ActionTypeIdle, ActionTypeLookAtCursor:
+		// Continue below.
 	default:
 		return
 	}
@@ -380,7 +397,6 @@ func (g *Game) updateDisplayImage(cursorPos Point) {
 
 	g.displayImage = g.currentAction.Images[imgIdx]
 
-	
 	if g.displayImgTick%frameTicks == 0 {
 		switch g.currentAction.Type {
 		case ActionTypeWalkingLeft:
@@ -445,15 +461,12 @@ func (g *Game) chooseNextNaturalAction() {
 	roll := rng.Intn(100)
 	nextAction := ActionTypeIdle
 
-
-	// a 20% chance. Running receives 30% total: 15% in each direction.
+	
 	if g.tick >= g.nextSleepAllowedTick && roll < 20 {
 		nextAction = ActionTypeSleep
 	} else {
 		switch {
 		case roll < 40:
-			// Remaining idle is still a valid behavior, keeping Daisy from
-			// feeling as though she must constantly perform an action.
 			nextAction = ActionTypeIdle
 		case roll < 55:
 			nextAction = ActionTypeWalkingLeft
@@ -504,6 +517,81 @@ func (g *Game) moveWindowHorizontally(distance int) bool {
 	return true
 }
 
+// free-fall if Daisy was released above the floor
+func (g *Game) startFall() {
+	g.cancelFallBounce()
+	floorY := float64(g.screenDimension.Height - g.windowDimension.Height)
+	if float64(g.windowPos.Y) < floorY {
+		g.isFalling = true
+		g.posYF = float64(g.windowPos.Y)
+	}
+}
+
+// stops any in-progress fall or bounce
+func (g *Game) cancelFallBounce() {
+	g.isFalling = false
+	g.fallVel = 0
+	g.bounceActive = false
+	g.bounceVel = 0
+	g.bounceSquash = 0
+	g.posYF = float64(g.windowPos.Y)
+}
+
+
+func (g *Game) updateFallBounce() {
+	floorY := float64(g.screenDimension.Height - g.windowDimension.Height)
+
+	if g.isFalling {
+		g.fallVel += gravity
+		if g.fallVel > maxFallVel {
+			g.fallVel = maxFallVel
+		}
+		g.posYF += g.fallVel
+		if g.posYF >= floorY {
+			g.posYF = floorY
+			g.isFalling = false
+			g.bounceActive = true
+			g.bounceVel = -g.fallVel * bounceRestitution
+			g.applyImpactSquash(g.fallVel)
+		}
+		g.windowPos.Y = int(g.posYF)
+	} else if g.bounceActive {
+		g.bounceVel += gravity
+		g.posYF += g.bounceVel
+		if g.posYF >= floorY {
+			g.posYF = floorY
+			if g.bounceVel > 1 {
+				impact := g.bounceVel
+				g.bounceVel = -impact * bounceRestitution
+				g.applyImpactSquash(impact)
+			} else {
+				g.bounceActive = false
+				g.bounceVel = 0
+			}
+		}
+		g.windowPos.Y = int(g.posYF)
+	}
+
+	if g.bounceSquash > 0 {
+		g.bounceSquash *= 0.85
+		if g.bounceSquash < 0.02 {
+			g.bounceSquash = 0
+		}
+	}
+}
+
+// applyImpactSquash sets the squash-and-stretch factor based on landing speed.
+func (g *Game) applyImpactSquash(speed float64) {
+	squash := speed * 0.02
+	if squash > 0.4 {
+		squash = 0.4
+	}
+	if squash < 0.06 {
+		squash = 0.06
+	}
+	g.bounceSquash = squash
+}
+
 func (g *Game) updateCurrentAction(actionType ActionType) {
 	action := g.actionIdle
 
@@ -524,7 +612,7 @@ func (g *Game) updateCurrentAction(actionType ActionType) {
 		action = g.actionLookAtCursor
 	}
 
-	
+	// Leaving sleep always starts a fresh cooldown
 	if g.currentAction != nil &&
 		g.currentAction.Type == ActionTypeSleep &&
 		actionType != ActionTypeSleep {
@@ -540,6 +628,7 @@ func (g *Game) updateCurrentAction(actionType ActionType) {
 	case ActionTypeSleep:
 		g.sleepLoopTarget = randomLoopTarget(sleepLoopMin, sleepLoopMax)
 	case ActionTypeRunningLeft, ActionTypeRunningRight:
+		// Autonomous runs last either two or three complete animation loops.
 		g.randomRunLoopTarget = randomLoopTarget(2, 3)
 	}
 
@@ -561,11 +650,14 @@ func (g *Game) handleWakeUpKittyIfNecessary() {
 	if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
 		g.leftClickTick = g.tick
 
-		
+		// Stop a run immediately when the user grabs Daisy. Otherwise the
 		if g.currentAction.Type == ActionTypeRunningLeft ||
 			g.currentAction.Type == ActionTypeRunningRight {
 			g.updateCurrentAction(ActionTypeIdle)
 		}
+
+		// Grabbing her again cancels any in-progress fall or bounce.
+		g.cancelFallBounce()
 	}
 
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
@@ -581,6 +673,8 @@ func (g *Game) handleWakeUpKittyIfNecessary() {
 		g.leftClickTick = 0
 		if g.currentAction.Type == ActionTypeHang {
 			g.updateCurrentAction(ActionTypeIdle)
+			// If she was dropped above the floor, she falls and bounces.
+			g.startFall()
 		}
 	}
 }

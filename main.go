@@ -57,6 +57,7 @@ func main() {
 				"assets/run/run3.png",
 				"assets/run/run4.png",
 				"assets/run/run5.png",
+				//"assets/run/run6.png",
 			},
 		},
 		ActionSourceHang: &ActionSource{
