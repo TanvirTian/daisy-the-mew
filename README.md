@@ -14,7 +14,7 @@ She's here to make your desktop a little more alive.
 
 ## Features
 
-- Walks and zooms around your desktop
+- Walks and runs around your desktop
 
 - Sleeps when she's tired
 
