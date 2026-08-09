@@ -13,7 +13,10 @@ const (
 )
 
 func main() {
+	tuning := LoadTuningConfig()
+
 	game, err := NewGame(GameConfig{
+		Tuning: tuning,
 		ActionSourceIdle: &ActionSource{
 			ImagePaths: []string{
 				"assets/idle/idle.png",
@@ -50,6 +53,8 @@ func main() {
 			},
 		},
 
+		// The supplied running frames face right. animation.go/pet.go reuse
+		// and mirror these images automatically when Daisy runs left.
 		ActionSourceRunning: &ActionSource{
 			ImagePaths: []string{
 				"assets/run/run1.png",

@@ -3,8 +3,8 @@ module daisy-the-mew
 go 1.26.4
 
 require (
+	github.com/BurntSushi/toml v1.6.0
 	github.com/hajimehoshi/ebiten/v2 v2.9.9
-	gopkg.in/validator.v2 v2.0.1
 )
 
 require (

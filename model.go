@@ -58,8 +58,3 @@ type Dimension struct {
 	Width  int
 	Height int
 }
-
-const (
-	walkSpeed = 16
-	runSpeed  = 90
-)
